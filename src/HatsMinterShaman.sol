@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.24;
 
 import {IBaal} from "baal/interfaces/IBaal.sol";
 import {IHats} from "hats-protocol/src/Interfaces/IHats.sol";
@@ -24,7 +24,7 @@ struct Badge {
     string name;
     Metadata metadata;
     uint256 amount;
-    bool awardsVotingToken;
+    bool isVotingToken;
     bool hasFixedAmount;
 }
 
@@ -64,13 +64,13 @@ contract HatsMinterShaman {
     }
 
     constructor(bytes memory _initParams) {
-        (Gate[7] memory _gates, address _dao, address _hats) = abi.decode(_initParams, (Gate[7], address, address));
+        (Gate[] memory _gates, address _dao, address _hats) = abi.decode(_initParams, (Gate[], address, address));
 
         require(_gates.length == 7, "HatsMinterShaman: invalid number of gates");
         require(_hats != address(0), "HatsMinterShaman: invalid hats address");
         require(_dao != address(0), "HatsMinterShaman: invalid dao address");
 
-        gates = _gates;
+        // gates = _gates;
         dao = IBaal(_dao);
         hats = IHats(_hats);
     }
@@ -127,6 +127,6 @@ contract HatsMinterShaman {
     }
 
     function isWearer(address _sender, uint256 _hatId) public view returns (bool) {
-        return hats.isWearerOfHat(_sender, _hatId);
+        return hats.isWearerOfHat(_sender, _hatId) && hats.isInGoodStanding(_sender, _hatId);
     }
 }
