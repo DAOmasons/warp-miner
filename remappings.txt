@@ -7,3 +7,4 @@ hats-protocol/=lib/hats-protocol/
 solady/=lib/hats-protocol/lib/solady/
 solbase/=lib/hats-protocol/lib/solbase/src/
 utils/=lib/hats-protocol/lib/utils/
+@solady/=lib/hats-protocol/lib/solady/

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IBaal} from "baal/interfaces/IBaal.sol";
-import {IHats} from "hats-protocol/src/Interfaces/IHats.sol";
+import {IBaal} from "lib/Baal/contracts/interfaces/IBaal.sol";
+import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
 
 enum GateType {
     None,
