@@ -24,6 +24,7 @@ struct Badge {
     string name;
     Metadata metadata;
     uint256 amount;
+    bool awardsVotingToken;
     bool hasFixedAmount;
 }
 
@@ -65,9 +66,60 @@ contract HatsMinterShaman {
     constructor(bytes memory _initParams) {
         (Gate[7] memory _gates, address _dao, address _hats) = abi.decode(_initParams, (Gate[7], address, address));
 
+        require(_gates.length == 7, "HatsMinterShaman: invalid number of gates");
+        require(_hats != address(0), "HatsMinterShaman: invalid hats address");
+        require(_dao != address(0), "HatsMinterShaman: invalid dao address");
+
         gates = _gates;
         dao = IBaal(_dao);
         hats = IHats(_hats);
+    }
+
+    function addBadge(Badge memory _badge) public hasPermission(0) {
+        /// TODO:
+    }
+
+    function removeBadge(uint256 _badgeId) public hasPermission(1) {
+        /// TODO:
+    }
+
+    function awardBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _to)
+        public
+        hasPermission(2)
+    {
+        /// TODO:
+    }
+
+    function revokeBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _from)
+        public
+        hasPermission(3)
+    {
+        /// TODO:
+    }
+
+    function customMint(uint256 _amount, Metadata memory _metadata, address _to) public hasPermission(4) {
+        /// TODO:
+    }
+
+    function customBurn(uint256 _hatId, Metadata memory _metadata, address _from) public hasPermission(5) {
+        /// TODO:
+    }
+
+    function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(6) {
+        /// TODO:
+    }
+
+    function getGate(uint8 _gateIndex) public view returns (Gate memory gate) {
+        require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
+        return gates[_gateIndex];
+    }
+
+    function getGatePermissionLevel(uint8 _gateIndex) public view returns (GateType) {
+        return getGate(_gateIndex).gateType;
+    }
+
+    function getGateHatId(uint8 _gateIndex) public view returns (uint256) {
+        return getGate(_gateIndex).hatId;
     }
 
     function isDAO(address _sender) public view returns (bool) {
