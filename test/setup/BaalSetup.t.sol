@@ -25,4 +25,8 @@ contract BaalSetupLive is Test, Accounts {
 
         _baal.setShamans(shamans, permissions);
     }
+
+    function dao() public view returns (IBaal) {
+        return _baal;
+    }
 }
