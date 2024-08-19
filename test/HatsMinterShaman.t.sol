@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {HatsMinterShaman, Gate, GateType} from "../src/HatsMinterShaman.sol";
+import {HatsMinterShaman, Gate, GateType, Metadata, Badge} from "../src/HatsMinterShaman.sol";
 import {BaalSetupLive} from "./setup/BaalSetup.t.sol";
 import {HatsSetupLive} from "./setup/HatsSetup.t.sol";
 
 contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     HatsMinterShaman public _hatsMinterShaman;
+
+    Metadata internal badgeMetadata = Metadata(1, "badge");
+
+    Badge internal simpleBadge = Badge("simple badge", badgeMetadata, 1_000e18, false, true, false, true);
+    Badge internal slashBadge = Badge("slash badge", badgeMetadata, 1_000e18, false, true, true, true);
 
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("arbitrumOne"), BLOCK_NUMBER);
@@ -59,5 +64,64 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
 
         assertEq(shaman().getGateHatId(6), 0);
         assertEq(uint8(shaman().getGatePermissionLevel(6)), uint8(GateType.Dao));
+    }
+
+    //////////////////////////////
+    // Base Functionality
+    //////////////////////////////
+
+    function testCreateBadge() public {
+        _addBadge();
+        (
+            string memory name,
+            Metadata memory metadata,
+            uint256 amount,
+            bool isVotingToken,
+            bool hasFixedAmount,
+            bool isSlash,
+            bool exists
+        ) = shaman().badges(0);
+
+        assertEq(name, simpleBadge.name);
+        assertEq(metadata.protocol, simpleBadge.metadata.protocol);
+        assertEq(metadata.pointer, simpleBadge.metadata.pointer);
+        assertEq(amount, simpleBadge.amount);
+        assertEq(hasFixedAmount, simpleBadge.hasFixedAmount);
+        assertEq(isSlash, simpleBadge.isSlash);
+        assertTrue(exists);
+    }
+
+    function testCreateBadge_interates() public {}
+
+    //////////////////////////////
+    // Reverts
+    //////////////////////////////
+
+    //////////////////////////////
+    // Getters
+    //////////////////////////////
+
+    function testGetBadge() public {
+        _addBadge();
+
+        Badge memory badge = shaman().getBadge(0);
+        assertEq(badge.name, simpleBadge.name);
+        assertEq(badge.metadata.protocol, simpleBadge.metadata.protocol);
+        assertEq(badge.metadata.pointer, simpleBadge.metadata.pointer);
+        assertEq(badge.amount, simpleBadge.amount);
+        assertEq(badge.hasFixedAmount, simpleBadge.hasFixedAmount);
+        assertEq(badge.isSlash, simpleBadge.isSlash);
+        assertTrue(badge.exists);
+        // assertEq(badge.metadata, simpleBadge.metadata);
+    }
+
+    //////////////////////////////
+    // Helpers
+    //////////////////////////////
+
+    function _addBadge() internal {
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
     }
 }

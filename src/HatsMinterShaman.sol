@@ -10,6 +10,10 @@ enum GateType {
     Dao
 }
 
+/// ===============================
+/// ========== Struct =============
+/// ===============================
+
 struct Gate {
     GateType gateType;
     uint256 hatId;
@@ -26,6 +30,8 @@ struct Badge {
     uint256 amount;
     bool isVotingToken;
     bool hasFixedAmount;
+    bool isSlash;
+    bool exists;
 }
 
 contract HatsMinterShaman {
@@ -79,19 +85,32 @@ contract HatsMinterShaman {
         }
     }
 
-    function addBadge(Badge memory _badge) public hasPermission(0) {
-        /// TODO:
+    function createBadge(Badge memory _badge) public hasPermission(0) {
+        require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
+        badges[badgeNonce] = _badge;
+        badgeNonce++;
     }
 
     function removeBadge(uint256 _badgeId) public hasPermission(1) {
-        /// TODO:
+        require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
+        delete badges[_badgeId];
+    }
+
+    function replaceBadge(uint256 _badgeId, Badge memory _badge) public hasPermission(1) {
+        require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
+        require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
+        badges[_badgeId] = _badge;
     }
 
     function awardBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _to)
         public
         hasPermission(2)
     {
-        /// TODO:
+        require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
+
+        if (badges[_badgeId].hasFixedAmount) {
+            _amount = badges[_badgeId].amount;
+        }
     }
 
     function revokeBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _from)
@@ -111,6 +130,19 @@ contract HatsMinterShaman {
 
     function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(6) {
         /// TODO:
+    }
+
+    // function _handleMint() internal {
+
+    // }
+
+    // function _handleBurn() internal {
+
+    // }
+
+    function getBadge(uint256 _badgeId) public view returns (Badge memory badge) {
+        require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
+        return badges[_badgeId];
     }
 
     function getGate(uint8 _gateIndex) public view returns (Gate memory gate) {
