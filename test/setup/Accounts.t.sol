@@ -1,22 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "forge-std/StdCheats.sol";
+import "lib/forge-std/src/StdCheats.sol";
 
 contract Accounts is StdCheats {
     // //////////////////////
-    // Wearers
+    // users
     // //////////////////////
-    function wearer1() public returns (address) {
-        return makeAddr("admin_1");
+    function user1() public returns (address) {
+        return makeAddr("user_1");
     }
 
-    function wearer2() public returns (address) {
-        return makeAddr("admin_2");
+    function user2() public returns (address) {
+        return makeAddr("user_2");
     }
 
-    function wearer3() public returns (address) {
-        return makeAddr("admin_3");
+    function user3() public returns (address) {
+        return makeAddr("user_3");
+    }
+
+    function user4() public returns (address) {
+        return makeAddr("user_4");
+    }
+
+    function user5() public returns (address) {
+        return makeAddr("user_5");
+    }
+
+    function user6() public returns (address) {
+        return makeAddr("user_6");
+    }
+
+    function deployer() public returns (address) {
+        return makeAddr("deployer");
     }
 
     // //////////////////////

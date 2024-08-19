@@ -8,13 +8,10 @@ import {Accounts} from "./Accounts.t.sol";
 contract BaalSetupLive is Test, Accounts {
     uint256 constant BLOCK_NUMBER = 244299097;
     address constant DAO_MASONS = 0x5B448757A34402DEAcC7729B79003408CDfe1438;
-    address constant HATS = 0x3bc1A0Ad72417f2d411118085256fC53CBdDd137;
 
     IBaal internal _baal;
 
-    function __setUpDAO(address _shamanAddress) internal {
-        vm.createSelectFork(vm.rpcUrl("arbitrumOne"), BLOCK_NUMBER);
-
+    function __setUpDAO(address _shamanAddress, address _hats) internal {
         _baal = IBaal(DAO_MASONS);
         address[] memory shamans = new address[](1);
         uint256[] memory permissions = new uint256[](1);

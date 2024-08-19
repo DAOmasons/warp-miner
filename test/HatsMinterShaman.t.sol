@@ -3,11 +3,16 @@ pragma solidity ^0.8.24;
 
 import {HatsMinterShaman, Gate, GateType} from "../src/HatsMinterShaman.sol";
 import {BaalSetupLive} from "./setup/BaalSetup.t.sol";
+import {HatsSetupLive} from "./setup/HatsSetup.t.sol";
 
-contract HatsMinterShamanTest is BaalSetupLive {
+contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     HatsMinterShaman public _hatsMinterShaman;
 
     function setUp() public {
+        vm.createSelectFork(vm.rpcUrl("arbitrumOne"), BLOCK_NUMBER);
+
+        __setupHats();
+
         Gate[] memory gates = new Gate[](7);
 
         gates[0] = Gate(GateType.None, 1);
@@ -22,7 +27,7 @@ contract HatsMinterShamanTest is BaalSetupLive {
 
         _hatsMinterShaman = new HatsMinterShaman(initParams);
 
-        __setUpDAO(address(_hatsMinterShaman));
+        __setUpDAO(address(shaman()), address(hats()));
     }
 
     function shaman() public view returns (HatsMinterShaman) {
