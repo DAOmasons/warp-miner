@@ -54,7 +54,7 @@ contract HatsMinterShaman {
         if (gate.gateType == GateType.None) {
             assert(true);
         } else if (gate.gateType == GateType.Hat) {
-            require(hats.isWearerOfHat(msg.sender, gate.hatId), "HatsMinterShaman: not a hat owner");
+            require(isWearer(msg.sender, gate.hatId), "HatsMinterShaman: not a hat owner");
         } else if (gate.gateType == GateType.Dao) {
             require(isDAO(msg.sender), "HatsMinterShaman: gate is locked to DAO");
         } else {
