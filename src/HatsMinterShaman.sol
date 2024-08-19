@@ -102,7 +102,7 @@ contract HatsMinterShaman {
         badges[_badgeId] = _badge;
     }
 
-    function awardBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _to)
+    function applyBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _to)
         public
         hasPermission(2)
     {
