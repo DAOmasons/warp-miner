@@ -73,6 +73,10 @@ contract HatsMinterShaman {
         // gates = _gates;
         dao = IBaal(_dao);
         hats = IHats(_hats);
+
+        for (uint256 i = 0; i < _gates.length; i++) {
+            gates[i] = _gates[i];
+        }
     }
 
     function addBadge(Badge memory _badge) public hasPermission(0) {
