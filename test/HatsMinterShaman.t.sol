@@ -11,14 +11,17 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     Metadata internal badgeMetadata = Metadata(1, "badge");
     Metadata internal commentMetadata = Metadata(1, "comment");
 
+    uint256 internal STANDARD_AMT = 1_000e18;
+    uint256 internal CUSTOM_AMT = 10_000e18;
+
     // Loot
-    Badge internal simpleBadge = Badge("simple badge", badgeMetadata, 1_000e18, false, true, false, true);
-    Badge internal slashBadge = Badge("slash badge", badgeMetadata, 1_000e18, false, true, true, true);
+    Badge internal simpleBadge = Badge("simple badge", badgeMetadata, STANDARD_AMT, false, true, false, true);
+    Badge internal slashBadge = Badge("slash badge", badgeMetadata, STANDARD_AMT, false, true, true, true);
     Badge internal noAmountBadge = Badge("no amount badge", badgeMetadata, 0, false, false, false, true);
 
     // Shares
-    Badge internal sharesBadge = Badge("simple shares badge", badgeMetadata, 1_000e18, true, true, false, true);
-    Badge internal slashSharesBadge = Badge("slash shares badge", badgeMetadata, 1_000e18, true, true, true, true);
+    Badge internal sharesBadge = Badge("simple shares badge", badgeMetadata, STANDARD_AMT, true, true, false, true);
+    Badge internal slashSharesBadge = Badge("slash shares badge", badgeMetadata, STANDARD_AMT, true, true, true, true);
     Badge internal noAmountSharesBadge = Badge("no amount shares badge", badgeMetadata, 0, true, false, false, true);
 
     // other
@@ -201,6 +204,29 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         _applyBadgeSingle();
 
         assertEq(getLootBalance(recipient1()), simpleBadge.amount);
+    }
+
+    function testApplySingle_customAmount() public {
+        _createNoAmountBadge();
+        _applySingleCustomAmount();
+
+        assertEq(getLootBalance(recipient1()), CUSTOM_AMT);
+    }
+
+    function testApplySlash() public {
+        _createBadge();
+        _createSlashBadge();
+
+        _applyBadgeSingle();
+        _applyBadgeSingle();
+
+        _applyCustomBadge(1);
+
+        assertEq(getLootBalance(recipient1()), STANDARD_AMT + STANDARD_AMT - STANDARD_AMT);
+
+        _applyCustomBadge(1);
+
+        assertEq(getLootBalance(recipient1()), 0);
     }
 
     //////////////////////////////
@@ -408,11 +434,48 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         _createSlashNoFixedShares();
     }
 
+    function _applyCustomBadge(uint256 _badgeId) internal {
+        uint256[] memory _badgeIds = new uint256[](1);
+        uint256[] memory _amounts = new uint256[](1);
+        Metadata[] memory _comments = new Metadata[](1);
+        address[] memory _recipients = new address[](1);
+
+        _badgeIds[0] = _badgeId;
+        _amounts[0] = 0;
+        _comments[0] = commentMetadata;
+        _recipients[0] = recipient1();
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+    }
+
+    function _applySingleCustomAmount() internal {
+        uint256[] memory _badgeIds = new uint256[](1);
+        uint256[] memory _amounts = new uint256[](1);
+        Metadata[] memory _comments = new Metadata[](1);
+        address[] memory _recipients = new address[](1);
+
+        _badgeIds[0] = 0;
+        _amounts[0] = CUSTOM_AMT;
+        _comments[0] = commentMetadata;
+        _recipients[0] = recipient1();
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+    }
+
     function _applyBadgeSingle() internal {
-        _badgeIds.push(0);
-        _amounts.push(0);
-        _comments.push(badgeMetadata);
-        _recipients.push(recipient1());
+        uint256[] memory _badgeIds = new uint256[](1);
+        uint256[] memory _amounts = new uint256[](1);
+        Metadata[] memory _comments = new Metadata[](1);
+        address[] memory _recipients = new address[](1);
+
+        _badgeIds[0] = 0;
+        _amounts[0] = 0;
+        _comments[0] = commentMetadata;
+        _recipients[0] = recipient1();
 
         vm.startPrank(admin1().wearer);
         shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);

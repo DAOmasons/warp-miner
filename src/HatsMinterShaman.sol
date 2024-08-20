@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {IBaal} from "lib/Baal/contracts/interfaces/IBaal.sol";
 import {IBaalToken} from "lib/Baal/contracts/interfaces/IBaalToken.sol";
 import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
+import {console2} from "lib/forge-std/src/Test.sol";
 
 enum GateType {
     None,
@@ -126,6 +127,7 @@ contract HatsMinterShaman {
         }
 
         for (uint256 i = 0; i < _badgeIds.length; i++) {
+            console2.log("badgeId: ", _badgeIds[i]);
             Badge memory _badge = getBadge(_badgeIds[i]);
 
             if (_badge.hasFixedAmount) {
@@ -162,8 +164,10 @@ contract HatsMinterShaman {
                     if (_amount[0] > _recipientBalance) {
                         _amount[0] = _recipientBalance;
                     }
+                    console2.log("HatsMinterShaman: slash amount: ", _amount[0]);
                     dao.burnLoot(_recipient, _amount);
                 } else {
+                    console2.log("HatsMinterShaman: mint amount: ", _amount[0]);
                     dao.mintLoot(_recipient, _amount);
                 }
             }
