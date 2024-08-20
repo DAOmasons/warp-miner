@@ -42,4 +42,20 @@ contract Accounts is StdCheats {
     function someGuy() public returns (address) {
         return makeAddr("some_guy");
     }
+
+    function recipient1() public returns (address) {
+        return makeAddr("recipient1");
+    }
+
+    function recipient2() public returns (address) {
+        return makeAddr("recipient2");
+    }
+
+    function recipient3() public returns (address) {
+        return makeAddr("recipient3");
+    }
+
+    function recipient4() public returns (address) {
+        return makeAddr("recipient4");
+    }
 }

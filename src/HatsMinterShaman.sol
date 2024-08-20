@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {IBaal} from "lib/Baal/contracts/interfaces/IBaal.sol";
+import {IBaalToken} from "lib/Baal/contracts/interfaces/IBaalToken.sol";
 import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
 
 enum GateType {
@@ -109,43 +110,69 @@ contract HatsMinterShaman {
         badges[_badgeId] = _badge;
     }
 
-    function applyBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _to)
-        public
-        hasPermission(2)
-    {
-        require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
-
-        if (badges[_badgeId].hasFixedAmount) {
-            _amount = badges[_badgeId].amount;
+    //
+    function applyBadges(
+        uint256[] memory _badgeIds,
+        uint256[] memory _amounts,
+        Metadata[] memory _metadata,
+        address[] memory _recipients
+    ) public hasPermission(2) {
+        // TODO: test all possible cases for length mismatch
+        if (
+            _badgeIds.length != _amounts.length || _badgeIds.length != _metadata.length
+                || _badgeIds.length != _recipients.length
+        ) {
+            revert("HatsMinterShaman: length mismatch");
         }
-    }
 
-    function revokeBadge(uint256 _badgeId, uint256 _amount, Metadata memory _metadata, address _from)
-        public
-        hasPermission(3)
-    {
-        /// TODO:
-    }
+        for (uint256 i = 0; i < _badgeIds.length; i++) {
+            Badge memory _badge = getBadge(_badgeIds[i]);
 
-    function customMint(uint256 _amount, Metadata memory _metadata, address _to) public hasPermission(4) {
-        /// TODO:
-    }
+            if (_badge.hasFixedAmount) {
+                _amounts[i] = _badge.amount;
+            }
 
-    function customBurn(uint256 _hatId, Metadata memory _metadata, address _from) public hasPermission(5) {
-        /// TODO:
+            address[] memory _recipient = new address[](1);
+            uint256[] memory _amount = new uint256[](1);
+
+            _recipient[0] = _recipients[i];
+            _amount[0] = _amounts[i];
+
+            if (_badge.isVotingToken) {
+                if (_badge.isSlash) {
+                    // load token balance to prevent underflows
+                    IBaalToken sharesToken = IBaalToken(dao.sharesToken());
+                    uint256 _recipientBalance = sharesToken.balanceOf(_recipients[i]);
+
+                    // if recipient balance is less than amount, set amount to balance
+                    // so prevent underflow and remove remnaining balance
+                    if (_amount[0] > _recipientBalance) {
+                        _amount[0] = _recipientBalance;
+                    }
+
+                    dao.burnShares(_recipient, _amount);
+                } else {
+                    dao.mintShares(_recipient, _amount);
+                }
+            } else {
+                if (_badge.isSlash) {
+                    IBaalToken lootToken = IBaalToken(dao.lootToken());
+                    uint256 _recipientBalance = lootToken.balanceOf(_recipients[i]);
+
+                    if (_amount[0] > _recipientBalance) {
+                        _amount[0] = _recipientBalance;
+                    }
+                    dao.burnLoot(_recipient, _amount);
+                } else {
+                    dao.mintLoot(_recipient, _amount);
+                }
+            }
+        }
     }
 
     function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(6) {
         /// TODO:
     }
-
-    // function _handleMint() internal {
-
-    // }
-
-    // function _handleBurn() internal {
-
-    // }
 
     function getBadge(uint256 _badgeId) public view returns (Badge memory badge) {
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");

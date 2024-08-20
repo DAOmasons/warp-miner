@@ -9,6 +9,7 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     HatsMinterShaman public _hatsMinterShaman;
 
     Metadata internal badgeMetadata = Metadata(1, "badge");
+    Metadata internal commentMetadata = Metadata(1, "comment");
 
     // Loot
     Badge internal simpleBadge = Badge("simple badge", badgeMetadata, 1_000e18, false, true, false, true);
@@ -23,6 +24,11 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     // other
     Badge internal slashNoFixedLoot = Badge("slash no fixed loot", badgeMetadata, 0, false, false, true, true);
     Badge internal slashNoFixedShares = Badge("slash no fixed shares", badgeMetadata, 0, true, false, true, true);
+
+    uint256[] internal _badgeIds;
+    uint256[] internal _amounts;
+    Metadata[] internal _comments;
+    address[] internal _recipients;
 
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("arbitrumOne"), BLOCK_NUMBER);
@@ -43,7 +49,7 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
 
         _hatsMinterShaman = new HatsMinterShaman(initParams);
 
-        __setUpDAO(address(shaman()), address(hats()));
+        __setUpDAO(address(shaman()));
     }
 
     function shaman() public view returns (HatsMinterShaman) {
@@ -190,6 +196,13 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(existsAfter, true);
     }
 
+    function testApplySingleBadge() public {
+        _createBadge();
+        _applyBadgeSingle();
+
+        assertEq(getLootBalance(recipient1()), simpleBadge.amount);
+    }
+
     //////////////////////////////
     // Reverts
     //////////////////////////////
@@ -323,6 +336,17 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     //////////////////////////////
     // Helpers
     //////////////////////////////
+
+    function _applyBadgeSingle() internal {
+        _badgeIds.push(0);
+        _amounts.push(0);
+        _comments.push(badgeMetadata);
+        _recipients.push(recipient1());
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+    }
 
     function _createBadge() internal {
         vm.startPrank(manager1().wearer);
