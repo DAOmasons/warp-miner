@@ -62,7 +62,7 @@ contract HatsMinterShaman {
         } else if (gate.gateType == GateType.Hat) {
             require(isWearer(msg.sender, gate.hatId), "HatsMinterShaman: not a hat owner");
         } else if (gate.gateType == GateType.Dao) {
-            require(isDAO(msg.sender), "HatsMinterShaman: gate is locked to DAO");
+            require(isDAO(msg.sender), "HatsMinterShaman: dao owner only");
         } else {
             revert("HatsMinterShaman: unknown gate type");
         }
@@ -87,6 +87,10 @@ contract HatsMinterShaman {
 
     function createBadge(Badge memory _badge) public hasPermission(0) {
         require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
+
+        if (_badge.hasFixedAmount == false) {
+            require(_badge.amount == 0, "HatsMinterShaman: badge amount must 0");
+        }
         badges[badgeNonce] = _badge;
         badgeNonce++;
     }
@@ -98,6 +102,9 @@ contract HatsMinterShaman {
 
     function replaceBadge(uint256 _badgeId, Badge memory _badge) public hasPermission(1) {
         require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
+        if (_badge.hasFixedAmount == false) {
+            require(_badge.amount == 0, "HatsMinterShaman: badge amount must 0");
+        }
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
         badges[_badgeId] = _badge;
     }

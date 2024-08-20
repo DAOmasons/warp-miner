@@ -102,9 +102,158 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertTrue(exists);
     }
 
+    function testRemoveBadge() public {
+        _createBadge();
+
+        (
+            string memory name,
+            Metadata memory metadata,
+            uint256 amount,
+            bool isVotingToken,
+            bool hasFixedAmount,
+            bool isSlash,
+            bool exists
+        ) = shaman().badges(0);
+
+        assertEq(name, simpleBadge.name);
+        assertEq(metadata.protocol, simpleBadge.metadata.protocol);
+        assertEq(metadata.pointer, simpleBadge.metadata.pointer);
+        assertEq(amount, simpleBadge.amount);
+        assertEq(hasFixedAmount, simpleBadge.hasFixedAmount);
+        assertEq(isSlash, simpleBadge.isSlash);
+        assertTrue(exists);
+
+        _removeBadge(0);
+
+        (
+            string memory nameAfter,
+            Metadata memory metadataAfter,
+            uint256 amountAfter,
+            bool isVotingTokenAfter,
+            bool hasFixedAmountAfter,
+            bool isSlashAfter,
+            bool existsAfter
+        ) = shaman().badges(0);
+
+        assertEq(nameAfter, "");
+        assertEq(metadataAfter.protocol, 0);
+        assertEq(metadataAfter.pointer, "");
+        assertEq(amountAfter, 0);
+        assertEq(isVotingTokenAfter, false);
+        assertEq(hasFixedAmountAfter, false);
+        assertEq(isSlashAfter, false);
+        assertEq(existsAfter, false);
+    }
+
+    function testReplaceBadge() public {
+        _createBadge();
+
+        (
+            string memory name,
+            Metadata memory metadata,
+            uint256 amount,
+            bool isVotingToken,
+            bool hasFixedAmount,
+            bool isSlash,
+            bool exists
+        ) = shaman().badges(0);
+
+        assertEq(name, simpleBadge.name);
+        assertEq(metadata.protocol, simpleBadge.metadata.protocol);
+        assertEq(metadata.pointer, simpleBadge.metadata.pointer);
+        assertEq(amount, simpleBadge.amount);
+        assertEq(hasFixedAmount, simpleBadge.hasFixedAmount);
+        assertEq(isSlash, simpleBadge.isSlash);
+        assertTrue(exists);
+
+        vm.startPrank(manager1().wearer);
+        shaman().replaceBadge(0, slashNoFixedLoot);
+        vm.stopPrank();
+
+        (
+            string memory nameAfter,
+            Metadata memory metadataAfter,
+            uint256 amountAfter,
+            bool isVotingTokenAfter,
+            bool hasFixedAmountAfter,
+            bool isSlashAfter,
+            bool existsAfter
+        ) = shaman().badges(0);
+
+        assertEq(nameAfter, slashNoFixedLoot.name);
+        assertEq(metadataAfter.protocol, slashNoFixedLoot.metadata.protocol);
+        assertEq(metadataAfter.pointer, slashNoFixedLoot.metadata.pointer);
+        assertEq(amountAfter, slashNoFixedLoot.amount);
+        assertEq(isVotingTokenAfter, slashNoFixedLoot.isVotingToken);
+        assertEq(hasFixedAmountAfter, slashNoFixedLoot.hasFixedAmount);
+        assertEq(isSlashAfter, slashNoFixedLoot.isSlash);
+        assertEq(existsAfter, true);
+    }
+
     //////////////////////////////
     // Reverts
     //////////////////////////////
+
+    function testRevert_createBadge_Falsy() public {
+        Badge memory falsyBadge = Badge("falsy badge", badgeMetadata, 0, false, false, false, false);
+
+        vm.expectRevert("HatsMinterShaman: badge.exists must be true");
+
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(falsyBadge);
+        vm.stopPrank();
+    }
+
+    function testRevert_createBadge_nonFixedWithSpecifiedAmount() public {
+        Badge memory badge = Badge("incorrect badge", badgeMetadata, 1, false, false, false, true);
+
+        vm.expectRevert("HatsMinterShaman: badge amount must 0");
+
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(badge);
+        vm.stopPrank();
+    }
+
+    function testRevert_removeBadge_nonexistent() public {
+        vm.expectRevert("HatsMinterShaman: badge doesn't exist");
+
+        vm.startPrank(manager1().wearer);
+        shaman().removeBadge(0);
+        vm.stopPrank();
+    }
+
+    function testRevert_replaceBadge_nonexistent() public {
+        vm.expectRevert("HatsMinterShaman: badge doesn't exist");
+
+        vm.startPrank(manager1().wearer);
+        shaman().replaceBadge(0, simpleBadge);
+        vm.stopPrank();
+    }
+
+    function testRevert_replaceBadge_Falsy() public {
+        _createBadge();
+        Badge memory falsyBadge = Badge("falsy badge", badgeMetadata, 0, false, false, false, false);
+        vm.expectRevert("HatsMinterShaman: badge.exists must be true");
+
+        vm.startPrank(manager1().wearer);
+        shaman().replaceBadge(0, falsyBadge);
+        vm.stopPrank();
+    }
+
+    function testRevert_replaceBadge_nonFixedWithSpecifiedAmount() public {
+        _createBadge();
+        Badge memory badge = Badge("incorrect badge", badgeMetadata, 1, false, false, false, true);
+
+        vm.expectRevert("HatsMinterShaman: badge amount must 0");
+
+        vm.startPrank(manager1().wearer);
+        shaman().replaceBadge(0, badge);
+        vm.stopPrank();
+    }
+
+    function testRevert_gate_hat_unauthorized() public {}
+
+    function testRevert_gate_dao_unauthorized() public {}
 
     //////////////////////////////
     // Compound Functionality
@@ -190,6 +339,12 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     function _createNoAmountBadge() internal {
         vm.startPrank(manager1().wearer);
         shaman().createBadge(noAmountBadge);
+        vm.stopPrank();
+    }
+
+    function _removeBadge(uint256 _id) internal {
+        vm.startPrank(manager1().wearer);
+        shaman().removeBadge(_id);
         vm.stopPrank();
     }
 }
