@@ -118,7 +118,6 @@ contract HatsMinterShaman {
         Metadata[] memory _metadata,
         address[] memory _recipients
     ) public hasPermission(2) {
-        // TODO: test all possible cases for length mismatch
         if (
             _badgeIds.length != _amounts.length || _badgeIds.length != _metadata.length
                 || _badgeIds.length != _recipients.length
@@ -127,12 +126,16 @@ contract HatsMinterShaman {
         }
 
         for (uint256 i = 0; i < _badgeIds.length; i++) {
+            // getBadge checks if badge ID exists
             Badge memory _badge = getBadge(_badgeIds[i]);
 
+            // if badge has fixed amount
+            // set amount to badge amount
             if (_badge.hasFixedAmount) {
                 _amounts[i] = _badge.amount;
             }
 
+            // load operation into array to conform to Baal mint/burn signature
             address[] memory _recipient = new address[](1);
             uint256[] memory _amount = new uint256[](1);
 

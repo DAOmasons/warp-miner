@@ -342,6 +342,61 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         vm.stopPrank();
     }
 
+    function testRevert_applyBadges_nonexistent() public {
+        _createBadge();
+
+        vm.expectRevert("HatsMinterShaman: badge doesn't exist");
+        _applyCustomBadge(1);
+    }
+
+    function testRevert_applyBadges_arrayMismatch() public {
+        uint256[] memory _badgeIds = new uint256[](1);
+        uint256[] memory _amounts = new uint256[](2);
+        Metadata[] memory _comments = new Metadata[](1);
+        address[] memory _recipients = new address[](1);
+
+        vm.expectRevert("HatsMinterShaman: length mismatch");
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+
+        _badgeIds = new uint256[](2);
+        _amounts = new uint256[](1);
+
+        vm.expectRevert("HatsMinterShaman: length mismatch");
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+
+        _badgeIds = new uint256[](1);
+        _comments = new Metadata[](2);
+
+        vm.expectRevert("HatsMinterShaman: length mismatch");
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+
+        _comments = new Metadata[](1);
+        _recipients = new address[](2);
+
+        vm.expectRevert("HatsMinterShaman: length mismatch");
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+
+        _recipients = new address[](1);
+
+        vm.expectRevert("HatsMinterShaman: badge doesn't exist");
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+    }
+
     function testRevert_gate_hat_unauthorized() public {}
 
     function testRevert_gate_dao_unauthorized() public {}
@@ -519,6 +574,7 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         // burn loot for recipient 1 & 3
         // burn both for 1_500 to test underflow behavior, both should be zero
         // Award custom amount of shares for recipient 1 & 3
+
         _badgeIds[6] = 6;
         _badgeIds[7] = 6;
         _badgeIds[8] = 5;
