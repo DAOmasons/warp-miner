@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {IBaal} from "lib/Baal/contracts/interfaces/IBaal.sol";
 import {IBaalToken} from "lib/Baal/contracts/interfaces/IBaalToken.sol";
 import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
-// import {console2} from "lib/forge-std/src/Test.sol";
+import {console2} from "lib/forge-std/src/Test.sol";
 
 enum GateType {
     None,
@@ -163,6 +163,7 @@ contract HatsMinterShaman {
                     if (_amount[0] > _recipientBalance) {
                         _amount[0] = _recipientBalance;
                     }
+
                     dao.burnLoot(_recipient, _amount);
                 } else {
                     dao.mintLoot(_recipient, _amount);

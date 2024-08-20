@@ -208,7 +208,7 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
 
     function testApplySingle_customAmount() public {
         _createNoAmountBadge();
-        _applySingleCustomAmount();
+        _applySingleCustomAmount(0);
 
         assertEq(getLootBalance(recipient1()), CUSTOM_AMT);
     }
@@ -246,6 +246,38 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         _applyCustomBadge(1);
 
         assertEq(getSharesBalance(recipient1()), STANDARD_AMT + STANDARD_AMT - STANDARD_AMT);
+    }
+
+    function testApplySingle_shares_customAmount() public {
+        _createNoAmountSharesBadge();
+
+        _applySingleCustomAmount(0);
+
+        assertEq(getSharesBalance(recipient1()), CUSTOM_AMT);
+    }
+
+    function testSlash_customAmount_loot() public {
+        _createNoAmountBadge();
+        _createSlashNoFixedLoot();
+
+        _applySingleCustomAmount(0);
+        _applySingleCustomAmount(0);
+
+        _applySingleCustomAmount(1);
+
+        assertEq(getLootBalance(recipient1()), CUSTOM_AMT + CUSTOM_AMT - CUSTOM_AMT);
+    }
+
+    function testSlash_customAmount_shares() public {
+        _createNoAmountSharesBadge();
+        _createSlashNoFixedShares();
+
+        _applySingleCustomAmount(0);
+        _applySingleCustomAmount(0);
+
+        _applySingleCustomAmount(1);
+
+        assertEq(getSharesBalance(recipient1()), CUSTOM_AMT + CUSTOM_AMT - CUSTOM_AMT);
     }
 
     //////////////////////////////
@@ -469,13 +501,13 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         vm.stopPrank();
     }
 
-    function _applySingleCustomAmount() internal {
+    function _applySingleCustomAmount(uint256 _badgeId) internal {
         uint256[] memory _badgeIds = new uint256[](1);
         uint256[] memory _amounts = new uint256[](1);
         Metadata[] memory _comments = new Metadata[](1);
         address[] memory _recipients = new address[](1);
 
-        _badgeIds[0] = 0;
+        _badgeIds[0] = _badgeId;
         _amounts[0] = CUSTOM_AMT;
         _comments[0] = commentMetadata;
         _recipients[0] = recipient1();
