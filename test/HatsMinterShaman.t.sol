@@ -229,6 +229,13 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(getLootBalance(recipient1()), 0);
     }
 
+    function testApplySingle_shares() public {
+        _createSharesBadge();
+        _applyBadgeSingle();
+
+        assertEq(getSharesBalance(recipient1()), STANDARD_AMT);
+    }
+
     //////////////////////////////
     // Reverts
     //////////////////////////////
