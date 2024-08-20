@@ -315,6 +315,66 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertFalse(shaman().getBadge(3).exists);
     }
 
+    function testCreateAllPossibleBadges() public {
+        _createAllPossibleBadges();
+
+        assertEq(shaman().badgeNonce(), 8);
+
+        Badge memory badge1 = shaman().getBadge(0);
+        Badge memory badge2 = shaman().getBadge(1);
+        Badge memory badge3 = shaman().getBadge(2);
+        Badge memory badge4 = shaman().getBadge(3);
+        Badge memory badge5 = shaman().getBadge(4);
+        Badge memory badge6 = shaman().getBadge(5);
+        Badge memory badge7 = shaman().getBadge(6);
+        Badge memory badge8 = shaman().getBadge(7);
+
+        assertEq(badge1.name, simpleBadge.name);
+        assertEq(badge2.name, slashBadge.name);
+        assertEq(badge3.name, noAmountBadge.name);
+        assertEq(badge4.name, sharesBadge.name);
+        assertEq(badge5.name, slashSharesBadge.name);
+        assertEq(badge6.name, noAmountSharesBadge.name);
+        assertEq(badge7.name, slashNoFixedLoot.name);
+        assertEq(badge8.name, slashNoFixedShares.name);
+
+        assertEq(badge1.amount, simpleBadge.amount);
+        assertEq(badge2.amount, slashBadge.amount);
+        assertEq(badge3.amount, noAmountBadge.amount);
+        assertEq(badge4.amount, sharesBadge.amount);
+        assertEq(badge5.amount, slashSharesBadge.amount);
+        assertEq(badge6.amount, noAmountSharesBadge.amount);
+        assertEq(badge7.amount, slashNoFixedLoot.amount);
+        assertEq(badge8.amount, slashNoFixedShares.amount);
+
+        assertEq(badge1.hasFixedAmount, simpleBadge.hasFixedAmount);
+        assertEq(badge2.hasFixedAmount, slashBadge.hasFixedAmount);
+        assertEq(badge3.hasFixedAmount, noAmountBadge.hasFixedAmount);
+        assertEq(badge4.hasFixedAmount, sharesBadge.hasFixedAmount);
+        assertEq(badge5.hasFixedAmount, slashSharesBadge.hasFixedAmount);
+        assertEq(badge6.hasFixedAmount, noAmountSharesBadge.hasFixedAmount);
+        assertEq(badge7.hasFixedAmount, slashNoFixedLoot.hasFixedAmount);
+        assertEq(badge8.hasFixedAmount, slashNoFixedShares.hasFixedAmount);
+
+        assertEq(badge1.isSlash, simpleBadge.isSlash);
+        assertEq(badge2.isSlash, slashBadge.isSlash);
+        assertEq(badge3.isSlash, noAmountBadge.isSlash);
+        assertEq(badge4.isSlash, sharesBadge.isSlash);
+        assertEq(badge5.isSlash, slashSharesBadge.isSlash);
+        assertEq(badge6.isSlash, noAmountSharesBadge.isSlash);
+        assertEq(badge7.isSlash, slashNoFixedLoot.isSlash);
+        assertEq(badge8.isSlash, slashNoFixedShares.isSlash);
+
+        assertEq(badge1.exists, true);
+        assertEq(badge2.exists, true);
+        assertEq(badge3.exists, true);
+        assertEq(badge4.exists, true);
+        assertEq(badge5.exists, true);
+        assertEq(badge6.exists, true);
+        assertEq(badge7.exists, true);
+        assertEq(badge8.exists, true);
+    }
+
     //////////////////////////////
     // Getters
     //////////////////////////////
@@ -336,6 +396,17 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     //////////////////////////////
     // Helpers
     //////////////////////////////
+
+    function _createAllPossibleBadges() internal {
+        _createBadge();
+        _createSlashBadge();
+        _createNoAmountBadge();
+        _createSharesBadge();
+        _createSlashSharesBadge();
+        _createNoAmountSharesBadge();
+        _createSlashNoFixedLoot();
+        _createSlashNoFixedShares();
+    }
 
     function _applyBadgeSingle() internal {
         _badgeIds.push(0);
@@ -363,6 +434,36 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     function _createNoAmountBadge() internal {
         vm.startPrank(manager1().wearer);
         shaman().createBadge(noAmountBadge);
+        vm.stopPrank();
+    }
+
+    function _createSharesBadge() internal {
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(sharesBadge);
+        vm.stopPrank();
+    }
+
+    function _createSlashSharesBadge() internal {
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(slashSharesBadge);
+        vm.stopPrank();
+    }
+
+    function _createNoAmountSharesBadge() internal {
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(noAmountSharesBadge);
+        vm.stopPrank();
+    }
+
+    function _createSlashNoFixedLoot() internal {
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(slashNoFixedLoot);
+        vm.stopPrank();
+    }
+
+    function _createSlashNoFixedShares() internal {
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(slashNoFixedShares);
         vm.stopPrank();
     }
 
