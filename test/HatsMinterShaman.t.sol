@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {HatsMinterShaman, Gate, GateType, Metadata, Badge} from "../src/HatsMinterShaman.sol";
 import {BaalSetupLive} from "./setup/BaalSetup.t.sol";
 import {HatsSetupLive} from "./setup/HatsSetup.t.sol";
+import {console2} from "lib/forge-std/src/Test.sol";
 
 contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     HatsMinterShaman public _hatsMinterShaman;
@@ -450,6 +451,108 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(badge6.exists, true);
         assertEq(badge7.exists, true);
         assertEq(badge8.exists, true);
+    }
+
+    function testBatchApplyBadges() public {
+        _createAllPossibleBadges();
+
+        uint256[] memory _badgeIds = new uint256[](10);
+        uint256[] memory _amounts = new uint256[](10);
+        Metadata[] memory _comments = new Metadata[](10);
+        address[] memory _recipients = new address[](10);
+
+        // comments are all the same
+        _comments[0] = commentMetadata;
+        _comments[1] = commentMetadata;
+        _comments[2] = commentMetadata;
+        _comments[3] = commentMetadata;
+        _comments[4] = commentMetadata;
+        _comments[5] = commentMetadata;
+        _comments[6] = commentMetadata;
+        _comments[7] = commentMetadata;
+        _comments[8] = commentMetadata;
+        _comments[9] = commentMetadata;
+
+        // Award each user a simple loot badge
+        _badgeIds[0] = 0;
+        _badgeIds[1] = 0;
+        _badgeIds[2] = 0;
+
+        _amounts[0] = 0;
+        _amounts[1] = 0;
+        _amounts[2] = 0;
+
+        _recipients[0] = recipient1();
+        _recipients[1] = recipient2();
+        _recipients[2] = recipient3();
+
+        // recipient 1 loot: 1_000
+        // recipient 2 loot: 1_000
+        // recipient 3 loot: 1_000
+
+        // slash recipient 2 loot
+
+        _badgeIds[3] = 1;
+        _amounts[3] = 0;
+        _recipients[3] = recipient2();
+
+        // recipient 1 loot: 1_000
+        // recipient 2 loot: 0
+        // recipient 3 loot: 1_000
+
+        // Award user 1 & 2 a custom amount badge
+
+        _badgeIds[4] = 2;
+        _badgeIds[5] = 2;
+
+        _amounts[4] = 500e18;
+        _amounts[5] = 200e18;
+
+        _recipients[4] = recipient1();
+        _recipients[5] = recipient2();
+
+        // recipient 1 loot: 1_500
+        // recipient 2 loot: 200
+        // recipient 3 loot: 1_000
+
+        // Promote recipient 1 & 3 to shares
+        // burn loot for recipient 1 & 3
+        // burn both for 1_500 to test underflow behavior, both should be zero
+        // Award custom amount of shares for recipient 1 & 3
+        _badgeIds[6] = 6;
+        _badgeIds[7] = 6;
+        _badgeIds[8] = 5;
+        _badgeIds[9] = 5;
+
+        _amounts[6] = 1_500e18;
+        _amounts[7] = 1_500e18;
+        _amounts[8] = 1_500e18;
+        _amounts[9] = 1_000e18;
+
+        _recipients[6] = recipient1();
+        _recipients[7] = recipient3();
+        _recipients[8] = recipient1();
+        _recipients[9] = recipient3();
+
+        // recipient 1 shares: 1_500, loot: 0
+        // recipient 2 shares: 0, loot: 200
+        // recipient 3 shares: 1_000, loot: 0
+
+        vm.startPrank(admin1().wearer);
+        shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
+        vm.stopPrank();
+
+        console2.log("recipient 1 loot: ", loot().balanceOf(recipient1()));
+        console2.log("recipient 2 loot: ", loot().balanceOf(recipient2()));
+        console2.log("recipient 3 loot: ", loot().balanceOf(recipient3()));
+
+        assertEq(loot().balanceOf(recipient1()), 0);
+        assertEq(loot().balanceOf(recipient2()), 200e18);
+        assertEq(loot().balanceOf(recipient3()), 0);
+
+        assertEq(shares().balanceOf(recipient1()), 1_500e18);
+        assertEq(shares().balanceOf(recipient2()), 0);
+        assertEq(shares().balanceOf(recipient3()), 1_000e18);
     }
 
     //////////////////////////////

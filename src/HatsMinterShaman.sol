@@ -173,7 +173,9 @@ contract HatsMinterShaman {
     }
 
     function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(6) {
-        /// TODO:
+        require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
+
+        gates[_gateIndex] = Gate(_gateType, _hatId);
     }
 
     function getBadge(uint256 _badgeId) public view returns (Badge memory badge) {
