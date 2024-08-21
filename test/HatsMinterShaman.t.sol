@@ -39,15 +39,11 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
 
         __setupHats();
 
-        Gate[] memory gates = new Gate[](7);
+        Gate[] memory gates = new Gate[](3);
 
         gates[0] = Gate(GateType.Hat, _badgeManagerId);
-        gates[1] = Gate(GateType.Hat, _badgeManagerId);
-        gates[2] = Gate(GateType.Hat, _minterAdminId);
-        gates[3] = Gate(GateType.Hat, _minterAdminId);
-        gates[4] = Gate(GateType.Hat, _minterAdminId);
-        gates[5] = Gate(GateType.Hat, _minterAdminId);
-        gates[6] = Gate(GateType.Dao, 0);
+        gates[1] = Gate(GateType.Hat, _minterAdminId);
+        gates[2] = Gate(GateType.Dao, 0);
 
         bytes memory initParams = abi.encode(gates, DAO_MASONS, HATS);
 
@@ -68,23 +64,11 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(shaman().getGateHatId(0), _badgeManagerId);
         assertEq(uint8(shaman().getGatePermissionLevel(0)), uint8(GateType.Hat));
 
-        assertEq(shaman().getGateHatId(1), _badgeManagerId);
+        assertEq(shaman().getGateHatId(1), _minterAdminId);
         assertEq(uint8(shaman().getGatePermissionLevel(1)), uint8(GateType.Hat));
 
-        assertEq(shaman().getGateHatId(2), _minterAdminId);
-        assertEq(uint8(shaman().getGatePermissionLevel(2)), uint8(GateType.Hat));
-
-        assertEq(shaman().getGateHatId(3), _minterAdminId);
-        assertEq(uint8(shaman().getGatePermissionLevel(3)), uint8(GateType.Hat));
-
-        assertEq(shaman().getGateHatId(4), _minterAdminId);
-        assertEq(uint8(shaman().getGatePermissionLevel(4)), uint8(GateType.Hat));
-
-        assertEq(shaman().getGateHatId(5), _minterAdminId);
-        assertEq(uint8(shaman().getGatePermissionLevel(5)), uint8(GateType.Hat));
-
-        assertEq(shaman().getGateHatId(6), 0);
-        assertEq(uint8(shaman().getGatePermissionLevel(6)), uint8(GateType.Dao));
+        assertEq(shaman().getGateHatId(2), 0);
+        assertEq(uint8(shaman().getGatePermissionLevel(2)), uint8(GateType.Dao));
     }
 
     //////////////////////////////
@@ -626,7 +610,6 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(badge.hasFixedAmount, simpleBadge.hasFixedAmount);
         assertEq(badge.isSlash, simpleBadge.isSlash);
         assertTrue(badge.exists);
-        // assertEq(badge.metadata, simpleBadge.metadata);
     }
 
     //////////////////////////////

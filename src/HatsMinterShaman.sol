@@ -42,14 +42,10 @@ contract HatsMinterShaman {
 
     uint256 public badgeNonce;
 
-    Gate[7] public gates;
-    // 0 => addBadgeGate manages who can create new badges
-    // 1 => removeBadgeGate manages who can remove existing badges
-    // 2 => awardBadgeGate manages who can award badges and DAO tokens
-    // 3 => revokeBadgeGate manages who can revoke badges and DAO tokens
-    // 4 => customMintGate manages who can mint DAO tokens without a badge
-    // 5 => customBurnGate manages who can burn DAO tokens without a badge
-    // 6 => adminGate manages who can change the permission level of each gate
+    Gate[3] public gates;
+    // 0 => manages who can create, remove, and replace new badges
+    // 1 => manages who can mint/slash rewards with applyBadges
+    // 2 => manages who can change the Gates with manageGate
 
     /// badgeNonce => Badge
     mapping(uint256 => Badge) public badges;
@@ -74,11 +70,10 @@ contract HatsMinterShaman {
     constructor(bytes memory _initParams) {
         (Gate[] memory _gates, address _dao, address _hats) = abi.decode(_initParams, (Gate[], address, address));
 
-        require(_gates.length == 7, "HatsMinterShaman: invalid number of gates");
+        require(_gates.length == 3, "HatsMinterShaman: invalid number of gates");
         require(_hats != address(0), "HatsMinterShaman: invalid hats address");
         require(_dao != address(0), "HatsMinterShaman: invalid dao address");
 
-        // gates = _gates;
         dao = IBaal(_dao);
         hats = IHats(_hats);
 
@@ -97,12 +92,12 @@ contract HatsMinterShaman {
         badgeNonce++;
     }
 
-    function removeBadge(uint256 _badgeId) public hasPermission(1) {
+    function removeBadge(uint256 _badgeId) public hasPermission(0) {
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
         delete badges[_badgeId];
     }
 
-    function replaceBadge(uint256 _badgeId, Badge memory _badge) public hasPermission(1) {
+    function replaceBadge(uint256 _badgeId, Badge memory _badge) public hasPermission(0) {
         require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
         if (_badge.hasFixedAmount == false) {
             require(_badge.amount == 0, "HatsMinterShaman: badge amount must 0");
@@ -111,13 +106,12 @@ contract HatsMinterShaman {
         badges[_badgeId] = _badge;
     }
 
-    //
     function applyBadges(
         uint256[] memory _badgeIds,
         uint256[] memory _amounts,
         Metadata[] memory _metadata,
         address[] memory _recipients
-    ) public hasPermission(2) {
+    ) public hasPermission(1) {
         if (
             _badgeIds.length != _amounts.length || _badgeIds.length != _metadata.length
                 || _badgeIds.length != _recipients.length
@@ -175,7 +169,7 @@ contract HatsMinterShaman {
         }
     }
 
-    function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(6) {
+    function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(2) {
         require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
 
         gates[_gateIndex] = Gate(_gateType, _hatId);
