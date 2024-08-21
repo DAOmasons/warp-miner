@@ -7,6 +7,20 @@ import {HatsSetupLive} from "./setup/HatsSetup.t.sol";
 import {console2} from "lib/forge-std/src/Test.sol";
 
 contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
+    event Inintialized(Gate[] gates, address dao, address hats);
+    event BadgeSaved(
+        uint256 badgeId,
+        string name,
+        Metadata metadata,
+        uint256 amount,
+        bool isVotingToken,
+        bool hasFixedAmount,
+        bool isSlash
+    );
+    event BadgeRemoved(uint256 badgeId);
+
+    event BadgeAssigned(uint256 badgeId, address recipient, uint256 amount, Metadata comment);
+
     HatsMinterShaman public _hatsMinterShaman;
 
     Metadata internal badgeMetadata = Metadata(1, "badge");
@@ -29,11 +43,6 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     Badge internal slashNoFixedLoot = Badge("slash no fixed loot", badgeMetadata, 0, false, false, true, true);
     Badge internal slashNoFixedShares = Badge("slash no fixed shares", badgeMetadata, 0, true, false, true, true);
 
-    uint256[] internal _badgeIds;
-    uint256[] internal _amounts;
-    Metadata[] internal _comments;
-    address[] internal _recipients;
-
     function setUp() public {
         vm.createSelectFork(vm.rpcUrl("arbitrumOne"), BLOCK_NUMBER);
 
@@ -47,6 +56,8 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
 
         bytes memory initParams = abi.encode(gates, DAO_MASONS, HATS);
 
+        vm.expectEmit(true, true, true, true);
+        emit Inintialized(gates, DAO_MASONS, HATS);
         _hatsMinterShaman = new HatsMinterShaman(initParams);
 
         __setUpDAO(address(shaman()));
@@ -762,6 +773,9 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         _comments[0] = commentMetadata;
         _recipients[0] = recipient1();
 
+        vm.expectEmit(true, false, false, true);
+        emit BadgeAssigned(_badgeId, recipient1(), CUSTOM_AMT, commentMetadata);
+
         vm.startPrank(admin1().wearer);
         shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
         vm.stopPrank();
@@ -778,12 +792,27 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         _comments[0] = commentMetadata;
         _recipients[0] = recipient1();
 
+        vm.expectEmit(true, false, false, true);
+        emit BadgeAssigned(0, recipient1(), STANDARD_AMT, commentMetadata);
+
         vm.startPrank(admin1().wearer);
         shaman().applyBadges(_badgeIds, _amounts, _comments, _recipients);
         vm.stopPrank();
     }
 
     function _createBadge() internal {
+        vm.expectEmit(true, false, false, true);
+
+        emit BadgeSaved(
+            0,
+            simpleBadge.name,
+            simpleBadge.metadata,
+            simpleBadge.amount,
+            simpleBadge.isVotingToken,
+            simpleBadge.hasFixedAmount,
+            simpleBadge.isSlash
+        );
+
         vm.startPrank(manager1().wearer);
         shaman().createBadge(simpleBadge);
         vm.stopPrank();
@@ -832,6 +861,9 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
     }
 
     function _removeBadge(uint256 _id) internal {
+        vm.expectEmit(true, false, false, true);
+        emit BadgeRemoved(_id);
+
         vm.startPrank(manager1().wearer);
         shaman().removeBadge(_id);
         vm.stopPrank();

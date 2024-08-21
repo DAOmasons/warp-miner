@@ -6,18 +6,11 @@ import {IBaalToken} from "lib/Baal/contracts/interfaces/IBaalToken.sol";
 import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
 import {console2} from "lib/forge-std/src/Test.sol";
 
-/// ===============================
-/// ========== Enum ===============
-/// ===============================
 enum GateType {
     None,
     Hat,
     Dao
 }
-
-/// ===============================
-/// ========== Struct =============
-/// ===============================
 
 struct Gate {
     GateType gateType;
@@ -40,6 +33,22 @@ struct Badge {
 }
 
 contract HatsMinterShaman {
+    event Inintialized(Gate[] gates, address dao, address hats);
+
+    event BadgeSaved(
+        uint256 badgeId,
+        string name,
+        Metadata metadata,
+        uint256 amount,
+        bool isVotingToken,
+        bool hasFixedAmount,
+        bool isSlash
+    );
+
+    event BadgeRemoved(uint256 badgeId);
+
+    event BadgeAssigned(uint256 badgeId, address recipient, uint256 amount, Metadata comment);
+
     IBaal public dao;
     IHats public hats;
 
@@ -83,6 +92,8 @@ contract HatsMinterShaman {
         for (uint256 i = 0; i < _gates.length; i++) {
             gates[i] = _gates[i];
         }
+
+        emit Inintialized(_gates, _dao, _hats);
     }
 
     function createBadge(Badge memory _badge) public hasPermission(0) {
@@ -92,12 +103,25 @@ contract HatsMinterShaman {
             require(_badge.amount == 0, "HatsMinterShaman: badge amount must 0");
         }
         badges[badgeNonce] = _badge;
+
+        emit BadgeSaved(
+            badgeNonce,
+            _badge.name,
+            _badge.metadata,
+            _badge.amount,
+            _badge.isVotingToken,
+            _badge.hasFixedAmount,
+            _badge.isSlash
+        );
+
         badgeNonce++;
     }
 
     function removeBadge(uint256 _badgeId) public hasPermission(0) {
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
         delete badges[_badgeId];
+
+        emit BadgeRemoved(_badgeId);
     }
 
     function replaceBadge(uint256 _badgeId, Badge memory _badge) public hasPermission(0) {
@@ -107,16 +131,26 @@ contract HatsMinterShaman {
         }
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
         badges[_badgeId] = _badge;
+
+        emit BadgeSaved(
+            _badgeId,
+            _badge.name,
+            _badge.metadata,
+            _badge.amount,
+            _badge.isVotingToken,
+            _badge.hasFixedAmount,
+            _badge.isSlash
+        );
     }
 
     function applyBadges(
         uint256[] memory _badgeIds,
         uint256[] memory _amounts,
-        Metadata[] memory _metadata,
+        Metadata[] memory _comments,
         address[] memory _recipients
     ) public hasPermission(1) {
         if (
-            _badgeIds.length != _amounts.length || _badgeIds.length != _metadata.length
+            _badgeIds.length != _amounts.length || _badgeIds.length != _comments.length
                 || _badgeIds.length != _recipients.length
         ) {
             revert("HatsMinterShaman: length mismatch");
@@ -169,6 +203,8 @@ contract HatsMinterShaman {
                     dao.mintLoot(_recipient, _amount);
                 }
             }
+
+            emit BadgeAssigned(_badgeIds[i], _recipient[0], _amount[0], _comments[i]);
         }
     }
 
