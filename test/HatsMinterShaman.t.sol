@@ -381,9 +381,56 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         vm.stopPrank();
     }
 
-    function testRevert_gate_hat_unauthorized() public {}
+    function testRevert_gate_hat_unauthorized() public {
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        // Test user without a hat
+        vm.startPrank(someGuy());
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
 
-    function testRevert_gate_dao_unauthorized() public {}
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        // Test user with wrong hat
+        vm.startPrank(admin1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        // Test user with correct hat
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+    }
+
+    function testRevert_gate_dao_unauthorized() public {
+        vm.expectRevert("HatsMinterShaman: unauthorized, not DAO");
+
+        // test a random user
+        vm.startPrank(someGuy());
+        shaman().manageGate(2, GateType.None, 0);
+        vm.stopPrank();
+
+        vm.expectRevert("HatsMinterShaman: unauthorized, not DAO");
+        // test a recognized hat wearer
+        vm.startPrank(manager1().wearer);
+        shaman().manageGate(2, GateType.None, 0);
+        vm.stopPrank();
+
+        // test the DAO
+        vm.startPrank(dao().avatar());
+        shaman().manageGate(2, GateType.None, 0);
+        vm.stopPrank();
+
+        // Now that the gate is change to none, anyone can change it
+        vm.startPrank(someGuy());
+        shaman().manageGate(2, GateType.Hat, admin1().id);
+        vm.stopPrank();
+
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        vm.startPrank(someGuy());
+        shaman().manageGate(2, GateType.Hat, admin1().id);
+        vm.stopPrank();
+    }
+
+    function testRevert_gate_none() public {}
 
     //////////////////////////////
     // Compound Functionality
