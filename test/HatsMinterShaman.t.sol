@@ -265,6 +265,67 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(getSharesBalance(recipient1()), CUSTOM_AMT + CUSTOM_AMT - CUSTOM_AMT);
     }
 
+    function testManageGate() public {
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        vm.startPrank(auditor1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        vm.startPrank(dao().avatar());
+        shaman().manageGate(0, GateType.Hat, auditor1().id);
+        vm.stopPrank();
+
+        vm.startPrank(auditor1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+    }
+
+    function testManageGate_anyUser() public {
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        vm.startPrank(someGuy());
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        vm.startPrank(dao().avatar());
+        shaman().manageGate(0, GateType.None, 0);
+        vm.stopPrank();
+
+        vm.startPrank(someGuy());
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+    }
+
+    function testManageGate_dao() public {
+        address daoAddress = dao().avatar();
+        vm.expectRevert("HatsMinterShaman: unauthorized, not hat owner");
+        vm.startPrank(daoAddress);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        vm.startPrank(daoAddress);
+        shaman().manageGate(0, GateType.Dao, 0);
+        vm.stopPrank();
+
+        vm.expectRevert("HatsMinterShaman: unauthorized, not DAO");
+        vm.startPrank(someGuy());
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        vm.expectRevert("HatsMinterShaman: unauthorized, not DAO");
+        vm.startPrank(manager1().wearer);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+
+        vm.startPrank(daoAddress);
+        shaman().createBadge(simpleBadge);
+        vm.stopPrank();
+    }
+
     //////////////////////////////
     // Reverts
     //////////////////////////////

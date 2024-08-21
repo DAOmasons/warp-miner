@@ -6,6 +6,9 @@ import {IBaalToken} from "lib/Baal/contracts/interfaces/IBaalToken.sol";
 import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
 import {console2} from "lib/forge-std/src/Test.sol";
 
+/// ===============================
+/// ========== Enum ===============
+/// ===============================
 enum GateType {
     None,
     Hat,
