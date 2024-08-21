@@ -72,14 +72,18 @@ contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
         assertEq(address(shaman().dao()), address(dao()));
         assertEq(address(shaman().hats()), HATS);
 
-        assertEq(shaman().getGateHatId(0), _badgeManagerId);
-        assertEq(uint8(shaman().getGatePermissionLevel(0)), uint8(GateType.Hat));
+        Gate memory gate1 = shaman().getGate(0);
+        Gate memory gate2 = shaman().getGate(1);
+        Gate memory gate3 = shaman().getGate(2);
 
-        assertEq(shaman().getGateHatId(1), _minterAdminId);
-        assertEq(uint8(shaman().getGatePermissionLevel(1)), uint8(GateType.Hat));
+        assertEq(gate1.hatId, _badgeManagerId);
+        assertEq(uint8(gate1.gateType), uint8(GateType.Hat));
 
-        assertEq(shaman().getGateHatId(2), 0);
-        assertEq(uint8(shaman().getGatePermissionLevel(2)), uint8(GateType.Dao));
+        assertEq(gate2.hatId, _minterAdminId);
+        assertEq(uint8(gate2.gateType), uint8(GateType.Hat));
+
+        assertEq(gate3.hatId, 0);
+        assertEq(uint8(gate3.gateType), uint8(GateType.Dao));
     }
 
     //////////////////////////////

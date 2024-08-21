@@ -4,23 +4,31 @@ pragma solidity ^0.8.24;
 import {IBaal} from "lib/Baal/contracts/interfaces/IBaal.sol";
 import {IBaalToken} from "lib/Baal/contracts/interfaces/IBaalToken.sol";
 import {IHats} from "lib/hats-protocol/src/Interfaces/IHats.sol";
-import {console2} from "lib/forge-std/src/Test.sol";
 
+/// ================================
+/// ========== Struct/Enum =========
+/// ================================
+
+/// @notice Enum to indicate the security level of the gate
 enum GateType {
     None,
     Hat,
     Dao
 }
+/// @notice Struct to store gate information. Optional hatId to allow for different hats per gate.
+/// @note HatId is only required if GateType is Hat. If gateType is not hat, hatId should be 0.
 
 struct Gate {
     GateType gateType;
     uint256 hatId;
 }
 
+/// @notice Struct to store metadata. Protocol indicates the storage medium (eg. 1 == IPFS, 2 == Arweave) and pointer indicates the endpoint of the storage
 struct Metadata {
     uint256 protocol;
     string pointer;
 }
+/// @notice Struct to store badge information
 
 struct Badge {
     string name;
@@ -32,9 +40,28 @@ struct Badge {
     bool exists;
 }
 
+/// @title Hats Minter Shaman
+/// @author Jord
+/// @notice DAO contribitution scaffolding system for Moloch V3. Uses Hats Protocol to build to easily award repuatation and governance power to contributors and harden security over time.
 contract HatsMinterShaman {
+    /// ===============================
+    /// ========== Events =============
+    /// ===============================
+
+    /// @notice Emmitted when the contract is constructed
+    /// @param gates Array of gates for the contract
+    /// @param dao Address of the Moloch we are interacting with
+    /// @param hats Address of hats protocol
     event Inintialized(Gate[] gates, address dao, address hats);
 
+    /// @notice Emmitted when a badge is saved (create or replace)
+    /// @param badgeId Id of the badge
+    /// @param name Name of the badge
+    /// @param metadata Metadata of the badge
+    /// @param amount anount awarded or slashed when badge is applied
+    /// @param isVotingToken Whether the badge is a voting token (shares) or non-voting (loot)
+    /// @param hasFixedAmount Whether the badge has a fixed amount
+    /// @param isSlash Whether the badge is slashes the users balance (burn) or not (mint)
     event BadgeSaved(
         uint256 badgeId,
         string name,
@@ -45,23 +72,43 @@ contract HatsMinterShaman {
         bool isSlash
     );
 
+    /// @notice Emmitted when a badge is removed
+    /// @param badgeId Id of the badge
     event BadgeRemoved(uint256 badgeId);
 
+    /// @notice Emmitted when a badge is assigned
+    /// @param badgeId Id of the badge
+    /// @param recipient Address of the recipient
+    /// @param amount Amount awarded or slashed
+    /// @param comment Metadata
     event BadgeAssigned(uint256 badgeId, address recipient, uint256 amount, Metadata comment);
 
-    IBaal public dao;
-    IHats public hats;
+    /// ===============================
+    /// ========== Storage ============
+    /// ===============================
 
+    /// @notice Reference to the DAO (Ball Moloch V3) contract
+    IBaal public dao;
+    /// @notice Reference to Hats Protocol
+    IHats public hats;
+    /// @notice Incrementing badge nonce
     uint256 public badgeNonce;
 
+    /// @notice Array of gates, each gate has a configureable and updateable security level
     Gate[3] public gates;
     // 0 => manages who can create, remove, and replace new badges
     // 1 => manages who can mint/slash rewards with applyBadges
     // 2 => manages who can change the Gates with manageGate
 
-    /// badgeNonce => Badge
+    /// @notice Mapping of badges
+    /// @dev badgeId => Badge
     mapping(uint256 => Badge) public badges;
 
+    /// ===============================
+    /// ========== Modifiers ==========
+    /// ===============================
+
+    /// @notice Modifier to check the gate security level and apply security checks based on the gate security level
     modifier hasPermission(uint8 _gateIndex) {
         require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
 
@@ -79,6 +126,15 @@ contract HatsMinterShaman {
         _;
     }
 
+    /// ===============================
+    /// ========== Constructor ========
+    /// ===============================
+
+    /// @notice Constructor
+    /// @param _initParams bytes Init params
+    /// @dev  _gates => Array of Gates
+    /// @dev  _dao => Address of the DAO
+    /// @dev  _hats => Address of the hats protocol
     constructor(bytes memory _initParams) {
         (Gate[] memory _gates, address _dao, address _hats) = abi.decode(_initParams, (Gate[], address, address));
 
@@ -96,6 +152,8 @@ contract HatsMinterShaman {
         emit Inintialized(_gates, _dao, _hats);
     }
 
+    /// @notice Create a new badge
+    /// @param _badge Badge to create
     function createBadge(Badge memory _badge) public hasPermission(0) {
         require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
 
@@ -117,6 +175,8 @@ contract HatsMinterShaman {
         badgeNonce++;
     }
 
+    /// @notice Remove a badge
+    /// @param _badgeId Id of the badge
     function removeBadge(uint256 _badgeId) public hasPermission(0) {
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
         delete badges[_badgeId];
@@ -124,6 +184,9 @@ contract HatsMinterShaman {
         emit BadgeRemoved(_badgeId);
     }
 
+    /// @notice Replace an existing badge
+    /// @param _badgeId Id of the badge
+    /// @param _badge New badge
     function replaceBadge(uint256 _badgeId, Badge memory _badge) public hasPermission(0) {
         require(_badge.exists, "HatsMinterShaman: badge.exists must be true");
         if (_badge.hasFixedAmount == false) {
@@ -143,6 +206,11 @@ contract HatsMinterShaman {
         );
     }
 
+    /// @notice Apply badges
+    /// @param _badgeIds Ids of the badges
+    /// @param _amounts Amounts of the badges
+    /// @param _comments Comments of the badges
+    /// @param _recipients Recipients of the badges
     function applyBadges(
         uint256[] memory _badgeIds,
         uint256[] memory _amounts,
@@ -208,34 +276,47 @@ contract HatsMinterShaman {
         }
     }
 
+    /// @notice Manage a gate
+    /// @param _gateIndex Index of the gate
+    /// @param _gateType Type of the gate
+    /// @param _hatId Id of the hat
     function manageGate(uint8 _gateIndex, GateType _gateType, uint256 _hatId) public hasPermission(2) {
         require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
 
         gates[_gateIndex] = Gate(_gateType, _hatId);
     }
 
+    /// ===============================
+    /// ============ Views ============
+    /// ===============================
+
+    /// @notice Get a badge
+    /// @param _badgeId Id of the badge
+    /// @return badge Badge
     function getBadge(uint256 _badgeId) public view returns (Badge memory badge) {
         require(badges[_badgeId].exists, "HatsMinterShaman: badge doesn't exist");
         return badges[_badgeId];
     }
 
+    /// @notice Get a gate
+    /// @param _gateIndex Index of the gate
+    /// @return gate Gate
     function getGate(uint8 _gateIndex) public view returns (Gate memory gate) {
         require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
         return gates[_gateIndex];
     }
 
-    function getGatePermissionLevel(uint8 _gateIndex) public view returns (GateType) {
-        return getGate(_gateIndex).gateType;
-    }
-
-    function getGateHatId(uint8 _gateIndex) public view returns (uint256) {
-        return getGate(_gateIndex).hatId;
-    }
-
-    function isDAO(address _sender) public view returns (bool) {
+    /// @notice Determines if the sender is the DAO
+    /// @param  _sender The address of the sender
+    /// @return result bool - Whether the sender is the DAO
+    function isDAO(address _sender) public view returns (bool result) {
         return _sender == dao.avatar();
     }
 
+    /// @notice Determines if the sender is a hat wearer and is in good standing
+    /// @param  _sender The address of of the sender
+    /// @param  _hatId The id of the Hat
+    /// @return result bool - Whether the sender is a hat wearer and is in good standing
     function isWearer(address _sender, uint256 _hatId) public view returns (bool) {
         return hats.isWearerOfHat(_sender, _hatId) && hats.isInGoodStanding(_sender, _hatId);
     }
