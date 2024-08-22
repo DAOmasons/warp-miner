@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {HatsMinterShaman, Gate, GateType, Metadata, Badge} from "../src/HatsMinterShaman.sol";
+import {ScaffoldDaoShaman, Gate, GateType, Metadata, Badge} from "../src/ScaffoldDaoShaman.sol";
 import {BaalSetupLive} from "./setup/BaalSetup.t.sol";
 import {HatsSetupLive} from "./setup/HatsSetup.t.sol";
 import {console2} from "lib/forge-std/src/Test.sol";
 
-contract HatsMinterShamanTest is BaalSetupLive, HatsSetupLive {
+contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
     event Inintialized(Gate[] gates, address dao, address hats);
     event BadgeSaved(
         uint256 badgeId,

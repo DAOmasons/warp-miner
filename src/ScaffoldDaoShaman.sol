@@ -40,10 +40,10 @@ struct Badge {
     bool exists;
 }
 
-/// @title Hats Minter Shaman
+/// @title ScaffoldDaoShaman
 /// @author Jord
 /// @notice DAO contribitution scaffolding system for Moloch V3. Uses Hats Protocol to build to easily award repuatation and governance power to contributors and harden security over time.
-contract HatsMinterShaman {
+contract ScaffoldDaoShaman {
     /// ===============================
     /// ========== Events =============
     /// ===============================
