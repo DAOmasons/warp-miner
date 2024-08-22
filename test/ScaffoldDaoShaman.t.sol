@@ -506,8 +506,6 @@ contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
         vm.stopPrank();
     }
 
-    function testRevert_gate_none() public {}
-
     //////////////////////////////
     // Compound Functionality
     //////////////////////////////
