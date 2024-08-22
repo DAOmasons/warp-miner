@@ -2,8 +2,9 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
+import {ScaffoldDaoShaman, Gate, GateType} from "../src/ScaffoldDaoShaman.sol";
 
-contract CounterScript is Script {
+contract DeployShaman is Script {
     string _network;
 
     uint256 constant FACILITATOR_HAT = 377439664716248287426848749960570468768546267599534423130416380641280;
@@ -16,7 +17,7 @@ contract CounterScript is Script {
         _setEnvString();
 
         vm.startBroadcast(deployer);
-
+        _deploy();
         vm.stopBroadcast();
     }
 
@@ -30,5 +31,15 @@ contract CounterScript is Script {
         _network = vm.toString(key);
     }
 
-    // function _deploy
+    function _deploy() internal {
+        Gate[] memory gates = new Gate[](3);
+
+        gates[0] = Gate(GateType.Hat, FACILITATOR_HAT);
+        gates[1] = Gate(GateType.Hat, FACILITATOR_HAT);
+        gates[2] = Gate(GateType.Hat, FACILITATOR_HAT);
+
+        bytes memory initParams = abi.encode(gates, DAO, HATS);
+
+        new ScaffoldDaoShaman(initParams);
+    }
 }

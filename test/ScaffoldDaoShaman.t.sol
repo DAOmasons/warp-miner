@@ -21,7 +21,7 @@ contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
 
     event BadgeAssigned(uint256 badgeId, address recipient, uint256 amount, Metadata comment);
 
-    HatsMinterShaman public _hatsMinterShaman;
+    ScaffoldDaoShaman public _hatsMinterShaman;
 
     Metadata internal badgeMetadata = Metadata(1, "badge");
     Metadata internal commentMetadata = Metadata(1, "comment");
@@ -58,12 +58,12 @@ contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
 
         vm.expectEmit(true, true, true, true);
         emit Inintialized(gates, DAO_MASONS, HATS);
-        _hatsMinterShaman = new HatsMinterShaman(initParams);
+        _hatsMinterShaman = new ScaffoldDaoShaman(initParams);
 
         __setUpDAO(address(shaman()));
     }
 
-    function shaman() public view returns (HatsMinterShaman) {
+    function shaman() public view returns (ScaffoldDaoShaman) {
         return _hatsMinterShaman;
     }
 
