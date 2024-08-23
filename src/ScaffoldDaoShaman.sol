@@ -52,7 +52,19 @@ contract ScaffoldDaoShaman {
     /// @param gates Array of gates for the contract
     /// @param dao Address of the Moloch we are interacting with
     /// @param hats Address of hats protocol
-    event Inintialized(Gate[] gates, address dao, address hats);
+    /// @param lootTokenAddress Address of the loot token
+    /// @param sharesTokenAddress Address of the shares token
+    /// @param lootTokenSymbol Symbol of the loot token
+    /// @param sharesTokenSymbol Symbol of the shares token
+    event Inintialized(
+        Gate[] gates,
+        address dao,
+        address hats,
+        address lootTokenAddress,
+        address sharesTokenAddress,
+        string lootTokenSymbol,
+        string sharesTokenSymbol
+    );
 
     /// @notice Emmitted when a badge is saved (create or replace)
     /// @param badgeId Id of the badge
@@ -83,12 +95,23 @@ contract ScaffoldDaoShaman {
     /// @param comment Metadata
     event BadgeAssigned(uint256 badgeId, address recipient, uint256 amount, Metadata comment);
 
+    /// @notice Emmitted when a badge is updated
+    /// @param gateIndex Index of the gate
+    /// @param gateType Type of the gate
+    /// @param hatId Id of the hat
+    event GateUpdated(uint8 gateIndex, GateType gateType, uint256 hatId);
+
     /// ===============================
     /// ========== Storage ============
     /// ===============================
 
     /// @notice Reference to the DAO (Ball Moloch V3) contract
     IBaal public dao;
+    ///@notice Reference to the DAO voting token (shares)
+    IBaalToken public shares;
+    ///@notice Reference to the DAO non-voting token (loot)
+    IBaalToken public loot;
+
     /// @notice Reference to Hats Protocol
     IHats public hats;
     /// @notice Incrementing badge nonce
@@ -144,12 +167,17 @@ contract ScaffoldDaoShaman {
 
         dao = IBaal(_dao);
         hats = IHats(_hats);
+        shares = IBaalToken(dao.sharesToken());
+        loot = IBaalToken(dao.lootToken());
 
         for (uint256 i = 0; i < _gates.length; i++) {
             gates[i] = _gates[i];
         }
 
-        emit Inintialized(_gates, _dao, _hats);
+        string memory lootTokenSymbol = loot.symbol();
+        string memory sharesTokenSymbol = shares.symbol();
+
+        emit Inintialized(_gates, _dao, _hats, address(loot), address(shares), lootTokenSymbol, sharesTokenSymbol);
     }
 
     /// @notice Create a new badge
@@ -243,9 +271,8 @@ contract ScaffoldDaoShaman {
 
             if (_badge.isVotingToken) {
                 if (_badge.isSlash) {
-                    // load token balance to prevent underflows
-                    IBaalToken sharesToken = IBaalToken(dao.sharesToken());
-                    uint256 _recipientBalance = sharesToken.balanceOf(_recipients[i]);
+                    // load recipient balance
+                    uint256 _recipientBalance = shares.balanceOf(_recipients[i]);
 
                     // if recipient balance is less than amount, set amount to balance
                     // so prevent underflow and remove remnaining balance
@@ -259,8 +286,7 @@ contract ScaffoldDaoShaman {
                 }
             } else {
                 if (_badge.isSlash) {
-                    IBaalToken lootToken = IBaalToken(dao.lootToken());
-                    uint256 _recipientBalance = lootToken.balanceOf(_recipients[i]);
+                    uint256 _recipientBalance = loot.balanceOf(_recipients[i]);
 
                     if (_amount[0] > _recipientBalance) {
                         _amount[0] = _recipientBalance;
@@ -284,6 +310,8 @@ contract ScaffoldDaoShaman {
         require(_gateIndex < gates.length || _gateIndex >= gates.length, "HatsMinterShaman: gate index out of bounds");
 
         gates[_gateIndex] = Gate(_gateType, _hatId);
+
+        emit GateUpdated(_gateIndex, _gateType, _hatId);
     }
 
     /// ===============================

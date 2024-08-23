@@ -7,7 +7,16 @@ import {HatsSetupLive} from "./setup/HatsSetup.t.sol";
 import {console2} from "lib/forge-std/src/Test.sol";
 
 contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
-    event Inintialized(Gate[] gates, address dao, address hats);
+    event Inintialized(
+        Gate[] gates,
+        address dao,
+        address hats,
+        address lootTokenAddress,
+        address sharesTokenAddress,
+        string lootTokenSymbol,
+        string sharesTokenSymbol
+    );
+
     event BadgeSaved(
         uint256 badgeId,
         string name,
@@ -17,9 +26,12 @@ contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
         bool hasFixedAmount,
         bool isSlash
     );
+
     event BadgeRemoved(uint256 badgeId);
 
     event BadgeAssigned(uint256 badgeId, address recipient, uint256 amount, Metadata comment);
+
+    event GateUpdated(uint8 gateIndex, GateType gateType, uint256 hatId);
 
     ScaffoldDaoShaman public _hatsMinterShaman;
 
@@ -57,7 +69,15 @@ contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
         bytes memory initParams = abi.encode(gates, DAO_MASONS, HATS);
 
         vm.expectEmit(true, true, true, true);
-        emit Inintialized(gates, DAO_MASONS, HATS);
+        emit Inintialized(
+            gates,
+            DAO_MASONS,
+            HATS,
+            0x12B7D2963EE9311c2965a6320B64B0B24Af36Bb0,
+            0x4DE87a0Ed94133348A491e143021831cE037fAca,
+            "MS-LOOT",
+            "MS"
+        );
         _hatsMinterShaman = new ScaffoldDaoShaman(initParams);
 
         __setUpDAO(address(shaman()));
@@ -285,6 +305,9 @@ contract ScaffoldDaoShamanTest is BaalSetupLive, HatsSetupLive {
         vm.startPrank(auditor1().wearer);
         shaman().createBadge(simpleBadge);
         vm.stopPrank();
+
+        vm.expectEmit(true, false, false, true);
+        emit GateUpdated(0, GateType.Hat, auditor1().id);
 
         vm.startPrank(dao().avatar());
         shaman().manageGate(0, GateType.Hat, auditor1().id);
